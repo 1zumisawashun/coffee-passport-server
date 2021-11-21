@@ -1,4 +1,4 @@
-# coffee-
+# coffee-Passport-Server
 
 ■ what application is  
 ・web api for coffee-passport
@@ -10,6 +10,7 @@
 サーバー：Express
 トークン：Passport
 データベース：MongoDB
+ORM：Mongoose
 フロント：Ejs
 ```
 
