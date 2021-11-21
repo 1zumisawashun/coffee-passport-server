@@ -3,15 +3,19 @@ if (process.env.NODE_ENV !== "production") {
 }
 const express = require("express");
 const app = express();
+// for passport module
 const bcrypt = require("bcrypt");
 const passport = require("passport");
 const methodOverride = require("method-override");
 const flash = require("express-flash");
 const session = require("express-session");
 const initializePassport = require("./middleware/authMiddleware.js");
+// for mongodb module
+const mongoose = require("mongoose");
+const morgan = require("morgan");
 
+const api = process.env.API_URL;
 const users = [];
-console.log(users, "users");
 
 initializePassport(
   passport,
@@ -22,6 +26,7 @@ initializePassport(
 app.set("view-engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
+app.use(morgan("tiny"));
 
 app.use(flash());
 app.use(
@@ -98,6 +103,29 @@ function checkNotAuthenticated(req, res, next) {
   }
   next();
 }
+
+app.get(`${api}/products`, (req, res) => {
+  const product = {
+    id: 1,
+    name: "hair dresser",
+    image: "some_url",
+  };
+  res.send(product);
+});
+
+app.post(`${api}/products`, (req, res) => {
+  const newProducts = req.body;
+  console.log(newProducts, "newProducts");
+  res.send(newProducts);
+});
+
+mongoose
+  .connect(process.env.CONNECTION_STRING, {
+    useNewUrlParser: true, //ユーザーが新しいパーサーにバグを見つけたとき古いパーサーに逆戻りする機能
+    useUnifiedTopology: true, //新しいトポロジエンジンに関連しなくなったいくつかの接続オプションのサポートが削除される機能
+  })
+  .then(() => console.log("mongodb connected!"))
+  .catch((error) => console.log(error));
 
 //set port
 app.listen(3000);
