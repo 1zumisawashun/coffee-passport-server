@@ -14,6 +14,7 @@ const initializePassport = require("./middleware/authMiddleware.js");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const productsRouter = require("./routers/products");
+const categoriesRouter = require("./routers/categories");
 const cors = require("cors");
 app.options("*", cors());
 
@@ -30,6 +31,7 @@ initializePassport(
 app.use(morgan("tiny"));
 app.use(express.json());
 app.use(`${api}/products`, productsRouter);
+app.use(`${api}/categories`, categoriesRouter);
 
 mongoose
   .connect(process.env.CONNECTION_STRING, {
