@@ -13,6 +13,9 @@ const initializePassport = require("./middleware/authMiddleware.js");
 // for mongodb module
 const mongoose = require("mongoose");
 const morgan = require("morgan");
+const productsRouter = require("./routers/products");
+const cors = require("cors");
+app.options("*", cors());
 
 const api = process.env.API_URL;
 const users = [];
@@ -23,8 +26,19 @@ initializePassport(
   (id) => users.find((user) => user.id === id)
 );
 
+// mongodb middleware
 app.use(morgan("tiny"));
 app.use(express.json());
+app.use(`${api}/products`, productsRouter);
+
+mongoose
+  .connect(process.env.CONNECTION_STRING, {
+    useNewUrlParser: true, //ユーザーが新しいパーサーにバグを見つけたとき古いパーサーに逆戻りする機能
+    useUnifiedTopology: true, //新しいトポロジエンジンに関連しなくなったいくつかの接続オプションのサポートが削除される機能
+  })
+  .then(() => console.log("mongodb connected!"))
+  .catch((error) => console.log(error));
+
 app.set("view-engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(__dirname + "/public"));
@@ -104,51 +118,6 @@ function checkNotAuthenticated(req, res, next) {
   }
   next();
 }
-
-const productSchema = mongoose.Schema({
-  name: String,
-  image: String,
-  countInStock: Number,
-});
-const Product = mongoose.model("Product", productSchema);
-
-app.get(`${api}/products`, (req, res) => {
-  const product = {
-    id: 1,
-    name: "hair dresser",
-    image: "some_url",
-  };
-  res.send(product);
-});
-
-app.post(`${api}/products`, (req, res) => {
-  console.log(req.body, "req.body");
-  const product = new Product({
-    name: req.body.name,
-    image: req.body.image,
-    countInStock: req.body.countInStock,
-  });
-
-  product
-    .save()
-    .then((createdProduct) => {
-      res.status(201).json(createdProduct);
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-        success: false,
-      });
-    });
-});
-
-mongoose
-  .connect(process.env.CONNECTION_STRING, {
-    useNewUrlParser: true, //ユーザーが新しいパーサーにバグを見つけたとき古いパーサーに逆戻りする機能
-    useUnifiedTopology: true, //新しいトポロジエンジンに関連しなくなったいくつかの接続オプションのサポートが削除される機能
-  })
-  .then(() => console.log("mongodb connected!"))
-  .catch((error) => console.log(error));
 
 //set port
 app.listen(3000);
