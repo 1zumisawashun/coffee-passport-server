@@ -1,4 +1,4 @@
-# coffee-Passport-Server
+# coffee-passport-Server
 
 ■ what application is  
 ・web api for coffee-passport

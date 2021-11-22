@@ -9,7 +9,7 @@ router.get(`/`, async (req, res) => {
   // let filter = [];// これだと通常のfindが処理できなくなる
   if (req.query.categories) {
     filter = { category: req.query.categories.split(",") };
-    console.log(filter, "filter");
+    console.log(filter);
   }
   const productList = await Product.find(filter).populate("category");
   // const productList = await Product.find();

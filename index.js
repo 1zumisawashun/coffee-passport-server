@@ -4,24 +4,30 @@ if (process.env.NODE_ENV !== "production") {
 const express = require("express");
 const app = express();
 // for passport module
-const bcrypt = require("bcrypt");
 const passport = require("passport");
+const bcrypt = require("bcrypt");
 const methodOverride = require("method-override");
 const flash = require("express-flash");
 const session = require("express-session");
-const initializePassport = require("./middleware/authMiddleware.js");
+const {
+  initializePassword,
+  checkNotAuthenticated,
+  checkAuthenticated,
+} = require("./middleware/authMiddleware.js");
 // for mongodb module
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const productsRouter = require("./routers/products");
 const categoriesRouter = require("./routers/categories");
+const usersRouter = require("./routers/users");
+// const ordersRouter = require("./routers/orders");
 const cors = require("cors");
 app.options("*", cors());
 
 const api = process.env.API_URL;
 const users = [];
 
-initializePassport(
+initializePassword(
   passport,
   (email) => users.find((user) => user.email === email),
   (id) => users.find((user) => user.id === id)
@@ -32,6 +38,8 @@ app.use(morgan("tiny"));
 app.use(express.json());
 app.use(`${api}/products`, productsRouter);
 app.use(`${api}/categories`, categoriesRouter);
+app.use(`${api}/users`, usersRouter);
+// app.use(`${api}/orders`, ordersRouter);
 
 mongoose
   .connect(process.env.CONNECTION_STRING, {
@@ -55,7 +63,6 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-// for logout
 app.use(methodOverride("_method"));
 
 // index page
@@ -63,27 +70,7 @@ app.get("/", checkAuthenticated, (req, res) => {
   res.render("index.ejs", { name: req.user.name });
 });
 
-//login page
-app.get("/login", checkNotAuthenticated, (req, res) => {
-  res.render("login.ejs");
-});
-
-app.post(
-  "/login",
-  checkNotAuthenticated,
-  // ユーザー認証を実行する
-  passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/login",
-    failureFlash: true,
-  })
-);
-
-//register page
-app.get("/register", checkNotAuthenticated, (req, res) => {
-  res.render("register.ejs");
-});
-
+//register post
 app.post("/register", checkNotAuthenticated, async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -99,27 +86,33 @@ app.post("/register", checkNotAuthenticated, async (req, res) => {
   }
 });
 
+//login post
+app.post(
+  "/login",
+  checkNotAuthenticated,
+  // ユーザー認証を実行する
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+    failureFlash: true,
+  })
+);
+
+//register get
+app.get("/register", checkNotAuthenticated, (req, res) => {
+  res.render("register.ejs");
+});
+
+//login get
+app.get("/login", checkNotAuthenticated, (req, res) => {
+  res.render("login.ejs");
+});
+
 //delete
 app.delete("/logout", (req, res) => {
   req.logOut();
   res.redirect("/login");
 });
-
-//redirect middleware①
-function checkAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.redirect("/login");
-}
-
-//redirect middleware②
-function checkNotAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return res.redirect("/");
-  }
-  next();
-}
 
 //set port
 app.listen(3000);

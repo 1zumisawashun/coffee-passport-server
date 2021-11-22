@@ -1,7 +1,7 @@
 const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcrypt");
 
-function initialize(passport, getUserByEmail, getUserById) {
+function initializePassword(passport, getUserByEmail, getUserById) {
   const authenticateUser = async (email, password, done) => {
     const user = getUserByEmail(email);
     if (user == null) {
@@ -29,4 +29,24 @@ function initialize(passport, getUserByEmail, getUserById) {
   });
 }
 
-module.exports = initialize;
+//redirect middleware①
+function checkAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect("/login");
+}
+
+//redirect middleware②
+function checkNotAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return res.redirect("/");
+  }
+  next();
+}
+
+module.exports = {
+  initializePassword,
+  checkAuthenticated,
+  checkNotAuthenticated,
+};
