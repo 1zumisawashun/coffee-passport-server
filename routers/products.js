@@ -5,7 +5,13 @@ const { Category } = require("../models/category");
 const mongoose = require("mongoose");
 
 router.get(`/`, async (req, res) => {
-  const productList = await Product.find().populate("category");
+  let filter = {};
+  // let filter = [];// これだと通常のfindが処理できなくなる
+  if (req.query.categories) {
+    filter = { category: req.query.categories.split(",") };
+    console.log(filter, "filter");
+  }
+  const productList = await Product.find(filter).populate("category");
   // const productList = await Product.find();
   // const productList = await Product.find().select("name");
   // const productList = await Product.find().select("name image -_id");
@@ -16,23 +22,11 @@ router.get(`/`, async (req, res) => {
   res.send(productList);
 });
 
-router.get(`/:id`, async (req, res) => {
-  const product = await Product.findById(req.params.id).populate("category");
-  // const product = await Product.findById(req.params.id);
-  if (!product) {
-    res.status(500).json({ seccess: false });
-  }
-  res.send(product);
-});
-
-//FIXME:category一致させないと止まる。一度全て取得して照らし合わせる方が良いかも。
 router.post(`/`, async (req, res) => {
-  console.log(req.body.category, "check category");
-  //falseの時にループする。設定の問題？promiseが関係しているっぽい
-  const category = await Category.findById(req.body.category);
-  console.log(category, "category");
-  if (!category) {
-    return res.status(400).send("Invalid Category");
+  try {
+    const category = await Category.findById(req.body.category);
+  } catch (error) {
+    return res.status(400).send({ error: "Invalid Category" });
   }
 
   const product = new Product({
@@ -54,6 +48,25 @@ router.post(`/`, async (req, res) => {
     return res.status(500).send("The product connot be created !");
   }
   res.status(200).send(savedProduct);
+});
+
+router.get(`/get/count`, async (req, res) => {
+  let productCount = await Product.countDocuments();
+  if (!productCount) {
+    res.send(500).json({ success: false });
+  }
+  res.send({ count: productCount });
+});
+
+router.get(`/get/featured/:count`, async (req, res) => {
+  const count = req.params.count ? req.params.count : 0;
+  // convert number because params is string and limit only recieve number
+  let product = await Product.find({ isFeatured: true }).limit(+count);
+  if (!product) {
+    res.send(500).json({ success: false });
+  }
+  // objectで返す必要があるがproduct自体がオブジェクトなのでそのまま返している
+  res.send(product);
 });
 
 router.put("/:id", async (req, res) => {
@@ -90,6 +103,15 @@ router.put("/:id", async (req, res) => {
     return res.status(400).send("the product cannot be created !");
   }
   res.status(200).send(product);
+});
+
+router.get(`/:id`, async (req, res) => {
+  const product = await Product.findById(req.params.id).populate("category");
+  // const product = await Product.findById(req.params.id);
+  if (!product) {
+    res.status(500).json({ seccess: false });
+  }
+  res.send(product);
 });
 
 router.delete("/:id", (req, res) => {

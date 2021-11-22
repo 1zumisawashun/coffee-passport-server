@@ -55,4 +55,18 @@ const productSchema = mongoose.Schema({
   },
 });
 
+// ①convert "_id" to "id" and delete "_id"
+productSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+
+// ②convert "_id" to "id" and delete "_id"
+productSchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    delete ret._id;
+  },
+});
+
 exports.Product = mongoose.model("Product", productSchema);
