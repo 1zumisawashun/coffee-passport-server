@@ -22,6 +22,9 @@ const categoriesRouter = require("./routers/categories");
 const usersRouter = require("./routers/users");
 // const ordersRouter = require("./routers/orders");
 const cors = require("cors");
+const authJwt = require("./helpers/jwt.js");
+const { errorHandler } = require("./helpers/error-handler.js");
+
 app.options("*", cors());
 
 const api = process.env.API_URL;
@@ -36,6 +39,10 @@ initializePassword(
 // mongodb middleware
 app.use(morgan("tiny"));
 app.use(express.json());
+app.use(authJwt());
+app.use(errorHandler);
+
+// routes
 app.use(`${api}/products`, productsRouter);
 app.use(`${api}/categories`, categoriesRouter);
 app.use(`${api}/users`, usersRouter);

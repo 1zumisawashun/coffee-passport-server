@@ -52,14 +52,48 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       {
         userId: user.id,
+        isAdmin: user.isAdmin,
       },
       secret,
       { expiresIn: "1d" }
     );
+    //生成したjwtを確認すると上記で定義したStrを確認することができる
+    // https://jwt.io/
     res.status(200).send({ user: user.email, token: token });
   } else {
     res.status(400).send("password is wrong");
   }
+});
+
+router.get(`/get/count`, async (req, res) => {
+  let userCount = await User.countDocuments();
+  if (!userCount) {
+    res.send(500).json({ success: false });
+  }
+  res.send({ count: userCount });
+});
+
+router.delete("/:id", (req, res) => {
+  User.findByIdAndRemove(req.params.id)
+    .then((user) => {
+      if (user) {
+        return res.status(200).json({
+          success: true,
+          message: "the user is deleted",
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: "user cannot be deleted",
+        });
+      }
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        success: false,
+        error: err,
+      });
+    });
 });
 
 module.exports = router;
