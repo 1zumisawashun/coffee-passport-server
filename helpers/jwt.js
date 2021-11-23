@@ -1,9 +1,8 @@
 const expressJwt = require("express-jwt");
 
-function authJwt() {
+const authJwt = () => {
   const secret = process.env.JWT_SECRET;
   const api = process.env.API_URL;
-  console.log(secret, "check secret");
   return expressJwt({
     secret,
     algorithms: ["HS256"],
@@ -17,15 +16,13 @@ function authJwt() {
       `${api}/users/register`,
     ],
   });
-}
+};
 
-async function isRevoked(req, payload, done) {
-  console.log(payload, "payload");
+const isRevoked = (req, payload, done) => {
   if (!payload.isAdmin) {
-    console.log("yeah");
     done(null, true);
   }
   done();
-}
+};
 
-module.exports = authJwt;
+module.exports = { authJwt };

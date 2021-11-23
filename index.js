@@ -22,19 +22,13 @@ const categoriesRouter = require("./routers/categories");
 const usersRouter = require("./routers/users");
 // const ordersRouter = require("./routers/orders");
 const cors = require("cors");
-const authJwt = require("./helpers/jwt.js");
+const { authJwt } = require("./helpers/jwt.js");
 const { errorHandler } = require("./helpers/error-handler.js");
 
 app.options("*", cors());
 
 const api = process.env.API_URL;
 const users = [];
-
-initializePassword(
-  passport,
-  (email) => users.find((user) => user.email === email),
-  (id) => users.find((user) => user.id === id)
-);
 
 // mongodb middleware
 app.use(morgan("tiny"));
@@ -55,6 +49,12 @@ mongoose
   })
   .then(() => console.log("mongodb connected!"))
   .catch((error) => console.log(error));
+
+initializePassword(
+  passport,
+  (email) => users.find((user) => user.email === email),
+  (id) => users.find((user) => user.id === id)
+);
 
 app.set("view-engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
